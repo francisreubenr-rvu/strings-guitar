@@ -1,36 +1,90 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Strings — Guitar Learning Platform
 
-## Getting Started
+Webcam-powered, audio-aware guitar learning app. Real-time finger placement overlays, live chord recognition, structured curriculum (beginner → advanced), public domain song library, leaderboard.
 
-First, run the development server:
+---
+
+## Stack
+
+| Layer | Tech |
+|---|---|
+| Framework | Next.js 15 (App Router) |
+| Database / Auth | Supabase (Postgres + RLS + Auth) |
+| Hand tracking | MediaPipe Hands (browser-side WASM) |
+| Pitch detection | Pitchy (Web Audio API) |
+| Chord recognition | Custom FFT chromagram |
+| AI Tutor | OpenRouter (free models) |
+| Styling | Tailwind CSS + shadcn/ui |
+| Deployment | Vercel |
+
+All webcam and audio processing is **100% client-side**. Nothing is uploaded.
+
+---
+
+## Setup
+
+### 1. Supabase
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Go to **SQL Editor** and run `supabase/schema.sql`
+3. Then run `supabase/seed.sql` to populate the curriculum and songs
+4. Copy your **Project URL** and **anon key** from Settings → API
+
+### 2. Environment variables
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Fill in:
+```
+NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJ...
+SUPABASE_SERVICE_ROLE_KEY=eyJ...
+OPENROUTER_API_KEY=sk-or-...
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000)
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Deploy to Vercel
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npx vercel
+```
 
-## Deploy on Vercel
+Add all env vars in the Vercel dashboard (Settings → Environment Variables).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Key Files
+
+| File | Purpose |
+|---|---|
+| `src/lib/mediapipe/hand-tracker.ts` | MediaPipe Hands — maps 21 landmarks to fretboard positions |
+| `src/lib/audio/pitch-detector.ts` | Real-time pitch detection via Pitchy (<50ms) |
+| `src/lib/audio/chord-recognizer.ts` | FFT chromagram → chord template matching |
+| `src/components/webcam/FingerOverlay.tsx` | Canvas overlay: target vs actual finger positions |
+| `src/components/lessons/LessonPlayer.tsx` | Main lesson UI — webcam + audio + content |
+| `src/components/audio/Tuner.tsx` | Chromatic tuner with cents display |
+| `src/app/api/ai/tutor/route.ts` | OpenRouter AI tutor tip endpoint |
+| `supabase/schema.sql` | Full DB schema with RLS policies |
+| `supabase/seed.sql` | Curriculum (27 chapters, 135 lessons) + 12 public domain songs |
+
+---
+
+## Freemium Boundary
+
+- **Free**: Chapters 1–2 of beginner, tuner, 8 songs
+- **Pro**: Full curriculum, all songs, weekly board, leaderboard, AI tutor
+
+Set `is_premium = true` on a profile row in Supabase to grant Pro access manually.
