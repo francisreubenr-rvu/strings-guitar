@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { Song, WeeklySong } from '@/types'
 
 export default async function SongsPage() {
   const supabase = await createClient()
@@ -40,7 +41,7 @@ export default async function SongsPage() {
 
         <TabsContent value="weekly" className="space-y-3 mt-4">
           <p className="text-sm text-muted-foreground">Two new songs every Monday.</p>
-          {(weekly ?? []).map((ws: any) => (
+          {((weekly ?? []) as unknown as WeeklySong[]).map((ws) => (
             <SongCard key={ws.id} song={ws.song} note={ws.featured_note} weekly />
           ))}
           {(!weekly || weekly.length === 0) && (
@@ -50,7 +51,7 @@ export default async function SongsPage() {
 
         {(['beginner', 'intermediate', 'advanced'] as const).map(level => (
           <TabsContent key={level} value={level} className="space-y-3 mt-4">
-            {byDifficulty[level].map((song: any) => <SongCard key={song.id} song={song} />)}
+            {byDifficulty[level].map((song: Song) => <SongCard key={song.id} song={song} />)}
             {byDifficulty[level].length === 0 && (
               <p className="text-sm text-muted-foreground py-4">No songs at this level yet.</p>
             )}
@@ -61,7 +62,7 @@ export default async function SongsPage() {
   )
 }
 
-function SongCard({ song, note, weekly }: { song: any; note?: string; weekly?: boolean }) {
+function SongCard({ song, note, weekly }: { song: Song; note?: string | null; weekly?: boolean }) {
   return (
     <Card className="hover:bg-muted/40 transition-colors">
       <CardContent className="pt-4 pb-4">
@@ -74,7 +75,7 @@ function SongCard({ song, note, weekly }: { song: any; note?: string; weekly?: b
               {song.is_premium && <Badge className="text-xs">Pro</Badge>}
             </div>
             <p className="text-sm text-muted-foreground mt-0.5">{song.composer}</p>
-            {note && <p className="text-xs text-muted-foreground mt-1 italic">"{note}"</p>}
+            {note && <p className="text-xs text-muted-foreground mt-1 italic">&ldquo;{note}&rdquo;</p>}
             <div className="flex gap-2 mt-2 flex-wrap">
               {song.key_signature && (
                 <span className="text-xs text-muted-foreground">Key: {song.key_signature}</span>

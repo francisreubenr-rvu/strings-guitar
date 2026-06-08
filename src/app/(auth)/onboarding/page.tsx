@@ -62,8 +62,8 @@ export default function OnboardingPage() {
       <Card className="w-full max-w-lg">
         <CardHeader className="text-center">
           <div className="text-2xl font-bold mb-1">Strings</div>
-          <CardTitle>What's your level?</CardTitle>
-          <CardDescription>We'll put you in the right chapter immediately.</CardDescription>
+          <CardTitle>What&apos;s your level?</CardTitle>
+          <CardDescription>We&apos;ll put you in the right chapter immediately.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
 

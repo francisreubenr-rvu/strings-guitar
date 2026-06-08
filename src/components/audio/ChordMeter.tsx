@@ -43,7 +43,11 @@ export function ChordMeter({ targetChord, onPass }: Props) {
     }
   }, [])
 
-  // Count consecutive correct chord readings
+  // Count consecutive correct chord readings. This effect genuinely
+  // synchronizes derived state to the stream of detector readings (each new
+  // reading either increments the run or resets it), which is the intended use
+  // of an effect; the setState is required to drive the 5-hit pass gate.
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (!targetChord || !detected) { setConsecutiveHits(0); return }
     if (detected === targetChord && confidence > 0.7) {
@@ -59,6 +63,7 @@ export function ChordMeter({ targetChord, onPass }: Props) {
       setConsecutiveHits(0)
     }
   }, [detected, targetChord, confidence, passed, onPass])
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const isCorrect = targetChord && detected === targetChord && confidence > 0.7
 

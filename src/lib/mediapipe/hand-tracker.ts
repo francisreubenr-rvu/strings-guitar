@@ -1,9 +1,27 @@
-import type { DetectedHand, FingerPosition, HandLandmark } from '@/types'
+import type { DetectedHand, HandLandmark } from '@/types'
 
 // MediaPipe Hands landmark indices
 const FINGERTIP_INDICES = [4, 8, 12, 16, 20]       // thumb, index, middle, ring, pinky
-const FINGER_BASE_INDICES = [2, 5, 9, 13, 17]       // bases for each finger
-const WRIST_INDEX = 0
+
+// Shape of the results object MediaPipe Hands passes to onResults.
+interface HandResults {
+  multiHandLandmarks?: HandLandmark[][]
+  multiHandedness?: { label: string }[]
+}
+
+// Minimal surface of the MediaPipe Hands instance we use.
+interface MediaPipeHands {
+  setOptions(options: Record<string, unknown>): void
+  onResults(cb: (results: HandResults) => void): void
+  send(input: { image: HTMLVideoElement }): Promise<void>
+  close(): void
+}
+
+// Minimal surface of the MediaPipe Camera utility we use.
+interface MediaPipeCamera {
+  start(): Promise<void>
+  stop(): void
+}
 
 export interface HandTrackerCallbacks {
   onHands: (hands: DetectedHand[]) => void
@@ -28,8 +46,8 @@ export interface FretboardPosition {
 }
 
 export class HandTrackerEngine {
-  private hands: any = null  // mediapipe Hands instance
-  private camera: any = null
+  private hands: MediaPipeHands | null = null  // mediapipe Hands instance
+  private camera: MediaPipeCamera | null = null
   private callbacks: HandTrackerCallbacks
   private fretboardBounds: FretboardBounds | null = null
 
@@ -49,7 +67,7 @@ export class HandTrackerEngine {
     this.hands = new Hands({
       locateFile: (file: string) =>
         `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-    })
+    }) as unknown as MediaPipeHands
 
     this.hands.setOptions({
       maxNumHands: 2,
@@ -58,20 +76,20 @@ export class HandTrackerEngine {
       minTrackingConfidence: 0.7,
     })
 
-    this.hands.onResults((results: any) => this.handleResults(results))
+    this.hands.onResults((results: HandResults) => this.handleResults(results))
 
     this.camera = new Camera(videoElement, {
       onFrame: async () => {
-        await this.hands.send({ image: videoElement })
+        await this.hands?.send({ image: videoElement })
       },
       width: 1280,
       height: 720,
-    })
+    }) as unknown as MediaPipeCamera
 
     await this.camera.start()
   }
 
-  private handleResults(results: any) {
+  private handleResults(results: HandResults) {
     if (!results.multiHandLandmarks) {
       this.callbacks.onHands([])
       this.callbacks.onFretboardPositions([])
@@ -81,7 +99,7 @@ export class HandTrackerEngine {
     const hands: DetectedHand[] = results.multiHandLandmarks.map(
       (landmarks: HandLandmark[], i: number) => ({
         landmarks,
-        handedness: results.multiHandedness[i]?.label ?? 'Right',
+        handedness: (results.multiHandedness?.[i]?.label as 'Left' | 'Right') ?? 'Right',
       })
     )
 

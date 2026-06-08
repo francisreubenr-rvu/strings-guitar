@@ -5,23 +5,29 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { STATIC_LEVELS } from '@/lib/curriculum'
+import type { LevelWithChapters, ChapterWithLessons, LessonSummary } from '@/types'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: levels }] = await Promise.all([
+  const [{ data: profile }, { data: serverLevels }] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', user.id).single(),
     supabase.from('curriculum_levels').select('*, chapters(*, lessons(*))').order('order_index'),
   ])
 
+  const levels: LevelWithChapters[] = (serverLevels && serverLevels.length > 0)
+    ? (serverLevels as unknown as LevelWithChapters[])
+    : (STATIC_LEVELS as unknown as LevelWithChapters[])
+
   const skillLevel = profile?.skill_level ?? 'beginner'
-  const currentLevel = levels?.find(l => l.slug === skillLevel)
-  const chapters = currentLevel?.chapters ?? []
+  const currentLevel = levels.find(l => l.slug === skillLevel)
+  const chapters: ChapterWithLessons[] = currentLevel?.chapters ?? []
 
   // Fetch progress for this user
-  const lessonIds = chapters.flatMap((c: any) => c.lessons?.map((l: any) => l.id) ?? [])
+  const lessonIds = chapters.flatMap((c) => c.lessons?.map((l) => l.id) ?? [])
   const { data: progress } = await supabase
     .from('user_progress')
     .select('lesson_id, completed, best_accuracy')
@@ -35,7 +41,7 @@ export default async function DashboardPage() {
 
   // Find next incomplete lesson
   let nextLessonHref = ''
-  outer: for (const chapter of (chapters as any[])) {
+  outer: for (const chapter of chapters) {
     for (const lesson of (chapter.lessons ?? [])) {
       if (!completedIds.has(lesson.id)) {
         nextLessonHref = `/learn/${chapter.id}/${lesson.id}`
@@ -83,11 +89,11 @@ export default async function DashboardPage() {
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">Your Chapters</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          {(chapters as any[]).sort((a: any, b: any) => a.order_index - b.order_index).map((chapter: any) => {
-            const chapterLessons: any[] = chapter.lessons ?? []
-            const done = chapterLessons.filter((l: any) => completedIds.has(l.id)).length
+          {chapters.sort((a, b) => a.order_index - b.order_index).map((chapter) => {
+            const chapterLessons: LessonSummary[] = chapter.lessons ?? []
+            const done = chapterLessons.filter((l) => completedIds.has(l.id)).length
             const pct = chapterLessons.length > 0 ? Math.round((done / chapterLessons.length) * 100) : 0
-            const firstLesson = chapterLessons.sort((a: any, b: any) => a.order_index - b.order_index)[0]
+            const firstLesson = chapterLessons.sort((a, b) => a.order_index - b.order_index)[0]
 
             return (
               <Link

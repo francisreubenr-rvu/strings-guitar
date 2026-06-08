@@ -27,7 +27,6 @@ export async function updateSession(request: NextRequest) {
 
   const isAuthRoute = request.nextUrl.pathname.startsWith('/login') ||
     request.nextUrl.pathname.startsWith('/signup')
-  const isOnboarding = request.nextUrl.pathname.startsWith('/onboarding')
   const isProtected = request.nextUrl.pathname.startsWith('/dashboard') ||
     request.nextUrl.pathname.startsWith('/learn') ||
     request.nextUrl.pathname.startsWith('/songs') ||

@@ -17,6 +17,7 @@ export function usePitchDetector(active: boolean, useLineIn = false) {
       await engineRef.current.start(setReading, useLineIn)
       setError(null)
     } catch (e) {
+      console.error('Pitch detector failed to start', e)
       setError('Microphone access denied or unavailable.')
     }
   }, [useLineIn])
@@ -27,6 +28,11 @@ export function usePitchDetector(active: boolean, useLineIn = false) {
   }, [])
 
   useEffect(() => {
+    // This effect legitimately synchronizes an external system (the microphone /
+    // pitch-detector engine). start()/stop() set reading/error state, which the
+    // rule flags, but that is the intended use of an effect here and cannot be
+    // deferred without risking the mic lifecycle.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (active) { start() }
     else { stop() }
     return () => { stop() }

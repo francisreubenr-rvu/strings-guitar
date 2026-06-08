@@ -14,7 +14,6 @@ export function Tuner({ reading }: Props) {
   const noteLabel = note && octave !== null ? `${note}${octave}` : '--'
   const inTune = Math.abs(cents) <= 5
   const flat = cents < -5
-  const sharp = cents > 5
 
   // Match to standard string
   const matchedString = frequency

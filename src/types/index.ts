@@ -68,6 +68,56 @@ export interface Lesson {
   is_premium: boolean
 }
 
+// Joined query shapes (Supabase nested selects). These mirror what the UI
+// reads, not the full DB rows — STATIC_LEVELS fallback data is intentionally
+// partial, so nested lessons/chapters carry only the fields the pages use.
+export interface LessonSummary {
+  id: string
+  title: string
+  order_index: number
+  type: LessonType
+  is_premium: boolean
+}
+
+export interface ChapterWithLessons {
+  id: string
+  title: string
+  description: string | null
+  order_index: number
+  estimated_minutes: number
+  is_premium: boolean
+  thumbnail_url?: string | null
+  lessons?: LessonSummary[]
+}
+
+export interface LevelWithChapters {
+  id: string
+  slug: SkillLevel
+  name: string
+  description: string | null
+  order_index: number
+  chapters?: ChapterWithLessons[]
+}
+
+// A row from user_progress as selected by the learn/dashboard pages.
+export interface ProgressRow {
+  lesson_id: string
+  completed: boolean
+  best_accuracy: number
+}
+
+// Leaderboard query rows. The weekly query selects full rows; the all-time
+// aggregate query omits several columns, so everything beyond the keys the
+// list component reads is optional.
+export interface LeaderboardRow {
+  id?: string
+  user_id: string
+  score?: number
+  lessons_completed?: number
+  avg_accuracy?: number
+  profile?: Pick<Profile, 'username' | 'display_name' | 'avatar_url'> | null
+}
+
 export interface UserProgress {
   id: string
   user_id: string

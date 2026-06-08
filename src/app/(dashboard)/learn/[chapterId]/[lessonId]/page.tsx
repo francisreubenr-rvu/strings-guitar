@@ -53,8 +53,9 @@ export default async function LessonPage({ params }: Props) {
         .single()
 
       if (nextChapter) {
-        const firstLesson = (nextChapter.lessons as any[])
-          ?.sort((a: any, b: any) => a.order_index - b.order_index)[0]
+        const nextLessons = (nextChapter.lessons ?? []) as { id: string; order_index: number }[]
+        const firstLesson = nextLessons
+          .sort((a, b) => a.order_index - b.order_index)[0]
         if (firstLesson) nextLessonHref = `/learn/${nextChapter.id}/${firstLesson.id}`
       }
     }

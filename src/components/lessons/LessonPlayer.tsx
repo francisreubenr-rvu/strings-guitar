@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -32,18 +32,17 @@ export function LessonPlayer({ lesson, chapterId, nextLessonHref, prevLessonHref
 
   const [phase, setPhase] = useState<Phase>('setup')
   const [guitarType, setGuitarType] = useState<GuitarType | null>(null)
-  const [accuracy, setAccuracy] = useState(0)
   const [attempts, setAttempts] = useState(0)
   const [bestAccuracy, setBestAccuracy] = useState(0)
   const [aiTip, setAiTip] = useState<string | null>(null)
   const [loadingTip, setLoadingTip] = useState(false)
-  const [timeStart] = useState(Date.now())
+  const [timeStart] = useState(() => Date.now())
   const [containerSize, setContainerSize] = useState({ w: 640, h: 360 })
 
   const isPracticeLesson = lesson.type === 'chord' || lesson.type === 'exercise' || lesson.type === 'scale'
   const isTuningLesson = lesson.type === 'tuning'
 
-  const { hands, positions, ready: cameraReady } = useHandTracker(
+  const { positions } = useHandTracker(
     videoRef,
     phase === 'practice' && !!guitarType && !isTuningLesson,
     undefined
@@ -65,9 +64,9 @@ export function LessonPlayer({ lesson, chapterId, nextLessonHref, prevLessonHref
     return () => ro.disconnect()
   }, [])
 
-  // Compute accuracy from finger positions vs target
-  useEffect(() => {
-    if (phase !== 'practice' || !lesson.target_finger_positions || positions.length === 0) return
+  // Compute accuracy from finger positions vs target (derived state)
+  const accuracy = useMemo(() => {
+    if (!lesson.target_finger_positions || positions.length === 0) return 0
 
     const targets = lesson.target_finger_positions
     let matched = 0
@@ -79,10 +78,15 @@ export function LessonPlayer({ lesson, chapterId, nextLessonHref, prevLessonHref
       if (found) matched++
     })
     const nonMuted = targets.filter(t => !t.muted).length
-    const score = nonMuted > 0 ? Math.round((matched / nonMuted) * 100) : 0
-    setAccuracy(score)
-    if (score > bestAccuracy) setBestAccuracy(score)
-  }, [positions, lesson.target_finger_positions, phase, bestAccuracy])
+    return nonMuted > 0 ? Math.round((matched / nonMuted) * 100) : 0
+  }, [positions, lesson.target_finger_positions])
+
+  // Track the running best accuracy. Adjusting state during render (the
+  // documented React pattern) avoids a setState-in-effect; the guard makes it
+  // converge in one pass and never loop.
+  if (phase === 'practice' && accuracy > bestAccuracy) {
+    setBestAccuracy(accuracy)
+  }
 
   const handleGuitarConfirm = (type: GuitarType) => {
     setGuitarType(type)

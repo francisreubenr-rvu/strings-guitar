@@ -3,6 +3,7 @@ import { redirect, notFound } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import type { TabLine, ChordBeat } from '@/types'
 
 interface Props {
   params: Promise<{ songId: string }>
@@ -17,8 +18,8 @@ export default async function SongPage({ params }: Props) {
   const { data: song } = await supabase.from('songs').select('*').eq('id', songId).single()
   if (!song) notFound()
 
-  const tabs: any[] = song.tabs ?? []
-  const chordChart: any[] = song.chord_chart ?? []
+  const tabs: TabLine[] = song.tabs ?? []
+  const chordChart: ChordBeat[] = song.chord_chart ?? []
 
   return (
     <div className="p-6 max-w-3xl mx-auto space-y-6">
@@ -60,7 +61,7 @@ export default async function SongPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 flex-wrap font-mono text-sm">
-              {chordChart.map((beat: any, i: number) => (
+              {chordChart.map((beat: ChordBeat, i: number) => (
                 <div key={i} className="flex flex-col items-center min-w-[40px]">
                   <span className="font-bold">{beat.chord}</span>
                   <span className="text-xs text-muted-foreground">b{beat.beat}</span>
@@ -80,7 +81,7 @@ export default async function SongPage({ params }: Props) {
           </CardHeader>
           <CardContent>
             <div className="font-mono text-sm space-y-1 overflow-x-auto">
-              {tabs.map((line: any, i: number) => (
+              {tabs.map((line: TabLine, i: number) => (
                 <div key={i} className="flex gap-2 items-center">
                   <span className="text-muted-foreground w-3 shrink-0">{line.string_name}</span>
                   <span className="text-muted-foreground">|</span>

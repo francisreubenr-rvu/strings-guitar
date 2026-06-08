@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
+
 export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -39,7 +41,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true })
 }
 
-async function updateLeaderboard(supabase: any, userId: string, accuracy: number, completed: boolean) {
+async function updateLeaderboard(supabase: SupabaseServerClient, userId: string, accuracy: number, completed: boolean) {
   const now = new Date()
   const day = now.getDay()
   const monday = new Date(now)

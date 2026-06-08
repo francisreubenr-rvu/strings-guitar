@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import type { LeaderboardRow } from '@/types'
 
 function getMondayOf(date: Date) {
   const d = new Date(date)
@@ -48,25 +48,25 @@ export default async function LeaderboardPage() {
         </TabsList>
 
         <TabsContent value="weekly" className="mt-4">
-          <LeaderboardList entries={weekly ?? []} currentUserId={user.id} />
+          <LeaderboardList entries={(weekly ?? []) as unknown as LeaderboardRow[]} currentUserId={user.id} />
         </TabsContent>
 
         <TabsContent value="alltime" className="mt-4">
-          <LeaderboardList entries={allTime ?? []} currentUserId={user.id} />
+          <LeaderboardList entries={(allTime ?? []) as unknown as LeaderboardRow[]} currentUserId={user.id} />
         </TabsContent>
       </Tabs>
     </div>
   )
 }
 
-function LeaderboardList({ entries, currentUserId }: { entries: any[]; currentUserId: string }) {
+function LeaderboardList({ entries, currentUserId }: { entries: LeaderboardRow[]; currentUserId: string }) {
   if (entries.length === 0) {
     return <p className="text-sm text-muted-foreground py-8 text-center">No scores yet this period. Complete some lessons to appear here!</p>
   }
 
   return (
     <div className="space-y-2">
-      {entries.map((entry: any, i: number) => {
+      {entries.map((entry: LeaderboardRow, i: number) => {
         const profile = entry.profile
         const isMe = entry.user_id === currentUserId
         const initials = (profile?.display_name ?? profile?.username ?? '?')

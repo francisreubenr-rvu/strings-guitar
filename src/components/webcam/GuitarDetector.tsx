@@ -15,9 +15,6 @@ interface Props {
 export function GuitarDetector({ onConfirm, onSkip }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [stream, setStream] = useState<MediaStream | null>(null)
-  const [cameraReady, setCameraReady] = useState(false)
-  const [audioReady, setAudioReady] = useState(false)
-  const [detectedType, setDetectedType] = useState<GuitarType | null>(null)
   const [manualType, setManualType] = useState<GuitarType>('acoustic')
   const [checking, setChecking] = useState(false)
   const [step, setStep] = useState<'camera' | 'audio' | 'confirm'>('camera')
@@ -35,8 +32,6 @@ export function GuitarDetector({ onConfirm, onSkip }: Props) {
         videoRef.current.srcObject = s
         await videoRef.current.play()
       }
-      setCameraReady(true)
-      setAudioReady(true)
       setChecking(false)
       setStep('audio')
     } catch {
@@ -97,7 +92,7 @@ export function GuitarDetector({ onConfirm, onSkip }: Props) {
           {step === 'camera' && (
             <div className="space-y-4">
               <p className="text-muted-foreground text-sm">
-                We need camera and microphone access to give you real-time finger placement guidance and detect what you're playing.
+                We need camera and microphone access to give you real-time finger placement guidance and detect what you&apos;re playing.
               </p>
               <Button onClick={startCamera} disabled={checking} className="w-full">
                 {checking ? 'Requesting access...' : 'Allow Camera & Microphone'}

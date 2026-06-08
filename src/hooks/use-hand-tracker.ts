@@ -27,6 +27,7 @@ export function useHandTracker(
       setReady(true)
       setError(null)
     } catch (e) {
+      console.error('Hand tracker failed to start', e)
       setError('Camera access denied or MediaPipe failed to load.')
     }
   }, [videoRef, bounds])
@@ -38,6 +39,11 @@ export function useHandTracker(
   }, [])
 
   useEffect(() => {
+    // This effect legitimately synchronizes an external system (the camera /
+    // MediaPipe engine). start()/stop() set ready/error state synchronously,
+    // which the rule flags, but that is exactly the intended use of an effect
+    // here and cannot be deferred without risking the camera lifecycle.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (active) { start() }
     else { stop() }
     return () => { stop() }

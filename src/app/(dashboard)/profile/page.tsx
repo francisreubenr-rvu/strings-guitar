@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -16,7 +16,7 @@ export default function ProfilePage() {
   const [skillLevel, setSkillLevel] = useState<SkillLevel>('beginner')
   const [guitarType, setGuitarType] = useState<GuitarType>('acoustic')
   const [saving, setSaving] = useState(false)
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     const load = async () => {
@@ -31,7 +31,7 @@ export default function ProfilePage() {
       }
     }
     load()
-  }, [])
+  }, [supabase])
 
   const save = async () => {
     if (!profile) return
